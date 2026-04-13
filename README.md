@@ -4,3 +4,4 @@ install virtual environment/dependencies
 python -m venv venv
 venv\Scripts\activate
 pip install fastapi uvicorn pandas openpyxl chromadb sentence-transformers requests
+
