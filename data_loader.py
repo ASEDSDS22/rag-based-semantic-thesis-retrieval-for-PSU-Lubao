@@ -48,7 +48,7 @@ def search(query):
     return results["documents"]
 
 print("\nSearch Results:")
-print(search("machine learning"))
+print(search("smuletion leanirning topics"))
 
 import requests
 
@@ -78,4 +78,6 @@ def rag_answer(query):
     
 
 print("\nAI Answer:")
-print(rag_answer("What are common machine learning research topics?"))
+print(rag_answer("What are common simulation learning research topics?"))
+print(rag_answer("Suggest titles for a paper on simulation learning."))
+
