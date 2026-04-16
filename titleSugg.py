@@ -1,12 +1,11 @@
 import pandas as pd
 import chromadb
 from sentence_transformers import SentenceTransformer
+import requests
 
 # Load your dataset
 df = pd.read_excel("thesis.xlsx")  # or thesis.csv
 df.columns = df.columns.str.strip()  # Remove any leading/trailing whitespace from column names
-
-print(df.head())
 
 def row_to_text(row):
     return f"""
@@ -22,8 +21,6 @@ texts = []
 for _, row in df.iterrows():
     texts.append(row_to_text(row))
 
-print("\nSample text:\n", texts[0])
-
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 client = chromadb.Client()
@@ -38,26 +35,29 @@ for i, text in enumerate(texts):
         ids=[str(i)]
     )
 
-print("\nData stored in Chroma!")
-
 def search(query):
+    # Semantic search on full documents
     results = collection.query(
         query_embeddings=[model.encode(query).tolist()],
         n_results=5
     )
-    return results["documents"]
+    
+    # Also search for title matches
+    title_matches = [text for text in texts if query.lower() in text.lower() and "title:" in text.lower()]
+    
+    # Combine results, with semantic results first
+    combined_docs = results["documents"][0]
+    for doc in title_matches:
+        if doc not in combined_docs:
+            combined_docs.append(doc)
+    
+    return [combined_docs[:5]]  # Return top 5 results
 
-def recommend_topics(user_input):
+def suggest_titles(user_input):
     docs = search(user_input)
     context = "\n".join(docs[0])
 
-    prompt = f"""
-    Based on the following research topics and papers, suggest topics similar to "{user_input}":
-
-    {context}
-
-    Provide a concise list of suggested research topics similar to what the user is interested in, one per line.
-    """
+    prompt = f"""Based on "{user_input}", suggest 5 thesis titles. Reply with ONLY the titles, no explanations or numbers:"""
 
     response = requests.post(
         "http://localhost:11434/api/generate",
@@ -70,36 +70,6 @@ def recommend_topics(user_input):
 
     return response.json()["response"]
 
-print("\nSearch Results:")
-user_query = input("Enter your search topic: ")
-print(search(user_query))
-
-import requests
-
-def rag_answer(query):
-    docs = search(query)
-    context = "\n".join(docs[0])
-
-    prompt = f"""
-    Answer the question using ONLY the context below:
-
-    {context}
-
-    Question: {query}
-    """
-
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "phi3.5:latest",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-
-    return response.json()["response"]
-
-    
-
-print("\nSuggested Topics based on your input:")
-print(recommend_topics(user_query))
+if __name__ == "__main__":
+    user_topic = input("Enter your research topic: ")
+    print(suggest_titles(user_topic))
