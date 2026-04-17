@@ -9,6 +9,7 @@ df.columns = df.columns.str.strip()  # Remove any leading/trailing whitespace fr
 print(df.head())
 
 def row_to_text(row):
+    
     return f"""
     Title: {row['title_clean']}
     Journal: {row['journal_clean']}
@@ -78,4 +79,6 @@ def rag_answer(query):
     
 
 print("\nAI Answer:")
+print(rag_answer("What are common machine learning research topics?"))
+
 print(rag_answer("What are common machine learning research topics?"))
