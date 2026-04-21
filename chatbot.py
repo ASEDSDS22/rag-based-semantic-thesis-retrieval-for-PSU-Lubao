@@ -1,4 +1,4 @@
-import ollama
+import ollama 
 
 history = []
 model = "phi3.5:latest"  # Fixed model name (phi3.5 invalid)
